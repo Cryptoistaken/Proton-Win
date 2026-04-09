@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Promote a release branch into master and tag the merge commit.
+Promote a release branch to master: merge into master and tag the merge commit.
 
 Required environment variables:
   - CI_REPOSITORY_URL, RELEASE_PAT, RELEASE_GIT_EMAIL, RELEASE_GIT_USERNAME
