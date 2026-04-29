@@ -17,8 +17,8 @@
  * along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using FlaUI.Core.Conditions;
 using System;
+using FlaUI.Core.Conditions;
 
 namespace ProtonVPN.UI.Tests.UiTools;
 
@@ -27,12 +27,14 @@ public class Element
     public string SelectorName;
     public Func<ConditionFactory, ConditionBase> Condition;
     public Element? ChildElement;
+    public bool UseDescendantSearch;
 
     public Element(Func<ConditionFactory, ConditionBase> selector, string selectorName, Element? child = null)
     {
         SelectorName = selectorName;
         Condition = selector;
         ChildElement = child;
+        UseDescendantSearch = false;
     }
 
     public static Element ByAutomationId(string automationId)

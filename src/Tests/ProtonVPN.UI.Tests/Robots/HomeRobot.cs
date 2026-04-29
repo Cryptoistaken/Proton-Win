@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2024 Proton AG
+ * Copyright (c) 2026 Proton AG
  *
  * This file is part of ProtonVPN.
  *
@@ -16,12 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 using System;
 using System.Threading;
 using NUnit.Framework;
-using ProtonVPN.UI.Tests.TestsHelper;
+using ProtonVPN.UI.Tests.Enums;
 using ProtonVPN.UI.Tests.UiTools;
-using static ProtonVPN.UI.Tests.TestsHelper.TestConstants;
+using ProtonVPN.UI.Tests.TestsHelper;
 
 namespace ProtonVPN.UI.Tests.Robots;
 
@@ -57,17 +58,30 @@ public class HomeRobot
     protected Element ServerChangesUpsellLabel = Element.ByName("Get unlimited server changes with VPN Plus.");
     protected Element UpgradeButton = Element.ByName("Upgrade");
     protected Element DefaultConnectionSelectorButton = Element.ByAutomationId("DefaultConnectionSelectorButton");
-    protected Element FastestCountryOption = Element.ByName("Fastest country");
-    protected Element RandomCountryOption = Element.ByName("Random country");
-    protected Element LastConnectionOption = Element.ByName("Last connection");
-    protected Element CustomizeOption = Element.ByName("Customize");
+    protected Element DefaultConnectionDropdown = Element.ByAutomationId("DefaultConnectionDropdown");
     protected Element CustomizeCardConnectionTitleLabel = Element.ByName("Default connection");
     protected Element ProtectedLabelAdvancedKillSwitch = Element.ByName("Advanced kill switch activated");
+    protected Element CopyPortNumberButton = Element.ByAutomationId("CopyPortNumberCondensedButton");
+    protected Element SplitTunnelingWidgetButton = Element.ByAutomationId("SplitTunnelingWidgetButton");
     protected Element ShowIpFlyoutButton => Element.ByAutomationId("ShowIpFlyoutButton");
 
     public HomeRobot DismissWelcomeModal()
     {
-        GetStartedButton.Click();
+        Thread.Sleep(TestConstants.AnimationDelay);
+        GetStartedButton.ClickUntilElementDisappears();
+        Thread.Sleep(TestConstants.AnimationDelay);
+        return this;
+    }
+
+    public HomeRobot ClickOnConnectionCardTitle()
+    {
+        ConnectionCardTitle.Click();
+        return this;
+    }
+
+    public HomeRobot HoverOverSplitTunnelingFlyoutWidget()
+    {
+        SplitTunnelingWidgetButton.Hover();
         return this;
     }
 
@@ -159,30 +173,30 @@ public class HomeRobot
         return this;
     }
 
-    public HomeRobot SelectVpnConnectionOption(VpnConnectionOptions option)
+    public HomeRobot SelectDefaultConnectionOption(VpnConnectionOption option)
     {
         DefaultConnectionSelectorButton.Click();
-        // This sleep added because of animation
         Thread.Sleep(TestConstants.AnimationDelay);
 
-        switch (option)
+        string optionName = option switch
         {
-            case VpnConnectionOptions.Fast:
-                FastestCountryOption.DoubleClick();
-                break;
+            VpnConnectionOption.Fast => "Fastest country",
+            VpnConnectionOption.Random => "Random country",
+            VpnConnectionOption.Last => "Last connection",
+            _ => throw new NotImplementedException($"VpnConnectionOption '{option}' is not supported on the home page ComboBox."),
+        };
 
-            case VpnConnectionOptions.Random:
-                RandomCountryOption.DoubleClick();
-                break;
+        Element.ByName(optionName).Click();
+        Thread.Sleep(TestConstants.AnimationDelay);
 
-            case VpnConnectionOptions.Last:
-                LastConnectionOption.DoubleClick();
-                break;
+        return this;
+    }
 
-            case VpnConnectionOptions.Customized:
-                CustomizeOption.DoubleClick();
-                break;
-        }
+    public HomeRobot SelectDefaultConnectionCountry(string countryName, string? specificInfo = null)
+    {
+        DefaultConnectionSelectorButton.Click();
+        Thread.Sleep(TestConstants.AnimationDelay);
+        DefaultConnectionDropdown.SelectDropdownItem(countryName, specificInfo);
         return this;
     }
 
@@ -198,6 +212,12 @@ public class HomeRobot
         {
             UnprotectedLabel.WaitUntilDisplayed(TestConstants.ThirtySecondsTimeout);
             ConnectionCardConnectButton.WaitUntilDisplayed(TestConstants.ThirtySecondsTimeout);
+            return this;
+        }
+
+        public Verifications IsPortForwardingEnabled()
+        {
+            CopyPortNumberButton.WaitUntilDisplayed();
             return this;
         }
 
@@ -267,14 +287,22 @@ public class HomeRobot
             return this;
         }
 
-        public Verifications DoesConnectionCardTitleEqual(string title)
+        public Verifications ConnectionCardTitleEquals(string title)
         {
             ConnectionCardTitle.TextEquals(title);
             return this;
         }
 
-        public Verifications IsProtocolDisplayed(TestConstants.Protocol protocol)
+        public Verifications ConnectionCardDescriptionContains(string description)
         {
+            ConnectionCardDescription.TextContains(description);
+            return this;
+        }
+
+        public Verifications IsProtocolDisplayed(TestConstants.Protocol protocol, bool isProtun = false)
+        {
+            string? protonPrefix = isProtun ? "Proton " : null;
+
             switch (protocol)
             {
                 case TestConstants.Protocol.OpenVpnUdp:
@@ -284,22 +312,28 @@ public class HomeRobot
                     ConnectionDetailsProtocol.TextEquals("OpenVPN (TCP)");
                     break;
                 case TestConstants.Protocol.WireGuardTcp:
-                    ConnectionDetailsProtocol.TextEquals("WireGuard (TCP)");
+                    ConnectionDetailsProtocol.TextEquals(protonPrefix + "WireGuard (TCP)");
                     break;
                 case TestConstants.Protocol.WireGuardTls:
-                    ConnectionDetailsProtocol.TextEquals("Stealth");
+                    ConnectionDetailsProtocol.TextEquals(protonPrefix + "Stealth");
                     break;
                 case TestConstants.Protocol.WireGuardUdp:
-                    ConnectionDetailsProtocol.TextEquals("WireGuard (UDP)");
+                    ConnectionDetailsProtocol.TextEquals(protonPrefix + "WireGuard (UDP)");
                     break;
             }
 
             return this;
         }
 
-        public Verifications DoesCustomizedCardTitleEqual(string title)
+        public Verifications CustomizedCardTitleEquals(string title)
         {
             CustomizeCardConnectionTitleLabel.TextEquals(title);
+            return this;
+        }
+
+        public Verifications AssertVPNIpAndExternalIpMatch(string vpnIpAddress, string externalIpAddress)
+        {
+            Assert.That(vpnIpAddress.Equals(externalIpAddress), Is.True);
             return this;
         }
 

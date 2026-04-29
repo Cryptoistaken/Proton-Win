@@ -19,12 +19,12 @@
 
 using System;
 using System.IO;
+using System.Linq;
 
 namespace ProtonVPN.UI.Tests.TestsHelper;
 
 public static class TestConstants
 {
-    public const string PORT_CHECKER_API_BASE_URL = "https://portchecker.io/api";
     public const int DEFAULT_HOVER_DURATION_MS = 500;
 
     public static TimeSpan? DefaultElementWaitingTime => TimeSpan.FromSeconds(10);
@@ -41,12 +41,14 @@ public static class TestConstants
     public static TimeSpan RetryInterval => TimeSpan.FromMilliseconds(200);
     public static TimeSpan AnimationDelay => TimeSpan.FromMilliseconds(500);
     public static TimeSpan NavigationDelay => TimeSpan.FromMilliseconds(500);
+    public static TimeSpan UserInputSimulationDelay => TimeSpan.FromMilliseconds(500);
 
     public static string AppFolderPath = @"C:\Program Files\Proton\VPN";
     public static string LauncherPath = @"C:\Program Files\Proton\VPN\ProtonVPN.Launcher.exe";
     public static string MapCountry = "CA";
     public static string ClientLogsPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Proton\Proton VPN\Logs\client-logs.txt");
     public static string UserStoragePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Proton\Proton VPN");    
+    public static string? ServerStoragePath => Directory.GetFiles(Path.Combine(UserStoragePath, "Storage"), "Servers.*.bin").OrderByDescending(File.GetLastWriteTime).FirstOrDefault();
 
     public enum Protocol
     {
@@ -55,13 +57,12 @@ public static class TestConstants
         WireGuardTcp,
         OpenVpnTcp,
         WireGuardTls,
+        Smart,
     }
 
-    public enum VpnConnectionOptions
+    public enum SplitTunnelingMode
     {
-        Fast,
-        Random,
-        Last,
-        Customized
+        Exclude,
+        Include,
     }
 }

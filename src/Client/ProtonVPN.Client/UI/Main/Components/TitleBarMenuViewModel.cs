@@ -21,7 +21,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Navigation;
 using ProtonVPN.Client.Commands;
 using ProtonVPN.Client.Common.Collections;
-using ProtonVPN.Client.Contracts.Services.Activation;
 using ProtonVPN.Client.Contracts.Services.Browsing;
 using ProtonVPN.Client.Contracts.Services.Lifecycle;
 using ProtonVPN.Client.Core.Bases;
@@ -160,9 +159,10 @@ public partial class TitleBarMenuViewModel : ActivatableViewModelBase,
     }
 
     [RelayCommand]
-    private Task NavigateToSettingsAsync()
+    private async Task NavigateToSettingsAsync()
     {
-        return _mainViewNavigator.NavigateToSettingsViewAsync();
+        await _mainViewNavigator.NavigateToSettingsViewAsync();
+        await _settingsViewNavigator.NavigateToCommonSettingsViewAsync();
     }
 
     [RelayCommand]

@@ -18,11 +18,12 @@
  */
 
 using System;
-using FlaUI.Core.AutomationElements;
+using System.Linq;
 using FlaUI.UIA3;
+using FlaUI.Core.AutomationElements;
 using NUnit.Framework;
-using ProtonVPN.UI.Tests.TestsHelper;
 using ProtonVPN.UI.Tests.UiTools;
+using ProtonVPN.UI.Tests.TestsHelper;
 
 namespace ProtonVPN.UI.Tests.Robots;
 
@@ -52,6 +53,14 @@ public class DesktopRobot
 
     public class Verifications : DesktopRobot
     {
+        public Verifications IsWindowTitlePresent(string windowTitlePart)
+        {
+            AutomationElement desktop = _automation.GetDesktop();
+            AutomationElement? desktopApp = desktop.FindAllChildren().FirstOrDefault(e => e.Name != null && e.Name.Contains(windowTitlePart));
+            Assert.That(desktopApp, Is.Not.Null, $"Window with title containing '{windowTitlePart}' was not found");
+            return this;
+        }
+
         public Verifications IsDisplayed(TimeSpan? timeout = null)
         {
             timeout ??= TimeSpan.FromSeconds(8);

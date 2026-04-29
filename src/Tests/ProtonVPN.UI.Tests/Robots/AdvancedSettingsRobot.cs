@@ -20,10 +20,12 @@
 using System;
 using System.Linq;
 using FlaUI.Core.Tools;
-using ProtonVPN.UI.Tests.TestsHelper;
+using NUnit.Framework;
 using ProtonVPN.UI.Tests.UiTools;
+using ProtonVPN.UI.Tests.TestsHelper;
 
 namespace ProtonVPN.UI.Tests.Robots;
+
 public class AdvancedSettingsRobot
 {
     protected Element CustomDnsSettingCard = Element.ByAutomationId("CustomDnsServersSettingsCard");
@@ -67,10 +69,23 @@ public class AdvancedSettingsRobot
 
     public class Verifications : AdvancedSettingsRobot
     {
+        public Verifications IsCustomDnsEnabled()
+        {
+            Assert.That(CustomDnsToggle.IsToggled(), Is.True);
+            return this;
+        }
+
+        public Verifications IsCustomDnsDisabled()
+        {
+            Assert.That(CustomDnsToggle.IsToggled(), Is.False);
+            return this;
+        }
+
         public Verifications IsCustomDnsAddressSet(string dnsAddress)
         {
             RetryResult<bool> retry = Retry.WhileFalse(
-                () => {
+                () =>
+                {
                     return DoesContainDnsAddress(dnsAddress);
                 },
                 TestConstants.FiveSecondsTimeout, TestConstants.RetryInterval);
@@ -85,7 +100,8 @@ public class AdvancedSettingsRobot
         public Verifications IsCustomDnsAddressNotSet(string dnsAddress)
         {
             RetryResult<bool> retry = Retry.WhileTrue(
-                () => {
+                () =>
+                {
                     return DoesContainDnsAddress(dnsAddress);
                 },
                 TestConstants.FiveSecondsTimeout, TestConstants.RetryInterval);

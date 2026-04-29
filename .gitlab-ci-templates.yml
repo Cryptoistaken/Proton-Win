@@ -6,27 +6,27 @@
     - job: build-installer-release-x64
       optional: true
   tags:
-    - redesign
+    - redesign #ui-tests-debug
   hooks:
     pre_get_sources_script:
       - Get-Process | Where-Object { $_.Name -like "proton*" } | Stop-Process -Force -ErrorAction Ignore
       - Get-Process | Where-Object { $_.Name -like "unins0*" } | Stop-Process -Force -ErrorAction Ignore
-      - if (Test-Path "C:\\Program Files\\Proton\\VPN") { Remove-Item "C:\\Program Files\\Proton\\VPN" -Recurse -Force }
   script:
     - ci\test-scripts\uninstall-app.ps1
     - ci\test-scripts\install-the-app.ps1
     - dotnet build src/Tests/ProtonVPN.UI.Tests/ProtonVPN.UI.Tests.csproj --arch x64 -o src/bin/e2e
     - ci\test-scripts\run-tests.ps1 -Category ${CATEGORY}
+  after_script:
     - ci\test-scripts\uninstall-app.ps1
   artifacts:
     when: always
     name: "result-ui"
     paths:
       - $SCREENSHOT_PATH
-      - TestResults/
+      - $UI_TEST_REPORT_PATH
     expire_in: 1 weeks
     reports:
-      junit: TestResults/*.xml
+      junit: $UI_TEST_REPORT_PATH/*.xml
   
 .unit_test_config:
   stage: test

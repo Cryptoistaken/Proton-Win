@@ -104,7 +104,6 @@
     <None Remove="UI\Main\Settings\Pages\CommonSettingsPageView.xaml" />
     <None Remove="UI\Main\Settings\Pages\Connection\ConnectionSettingsView.xaml" />
     <None Remove="UI\Main\Settings\Pages\DebugLogsPageView.xaml" />
-    <None Remove="UI\Main\Settings\Pages\DefaultConnections\DefaultConnectionPageView.xaml" />
     <None Remove="UI\Main\Settings\Pages\DeveloperToolsPageView.xaml" />
     <None Remove="UI\Main\Settings\Pages\ProtocolSettingsPageView.xaml" />
     <None Remove="UI\Main\Settings\Pages\UserDetailsComponent.xaml" />
@@ -312,7 +311,7 @@
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="UI\Main\Settings\Pages\DefaultConnections\DefaultConnectionPageView.xaml">
+    <Page Update="UI\Main\Settings\Pages\DefaultConnections\ConnectionPreferencesSettingsPageView.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
     </Page>
     <Page Update="UI\Main\Settings\Pages\AutoStartupSettingsPageView.xaml">
@@ -734,6 +733,12 @@
 
   <ItemGroup>
     <Page Update="UI\Main\Home\Details\Connection\SpeedChartComponentView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="UI\Controls\DefaultConnectionSelector.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

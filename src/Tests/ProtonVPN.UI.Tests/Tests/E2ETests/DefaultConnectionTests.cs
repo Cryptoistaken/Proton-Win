@@ -18,9 +18,10 @@
  */
 
 using NUnit.Framework;
+using ProtonVPN.UI.Tests.Enums;
+using ProtonVPN.UI.Tests.Extensions;
 using ProtonVPN.UI.Tests.TestBase;
 using ProtonVPN.UI.Tests.TestsHelper;
-using static ProtonVPN.UI.Tests.TestsHelper.TestConstants;
 
 namespace ProtonVPN.UI.Tests.Tests.E2ETests;
 
@@ -28,12 +29,15 @@ namespace ProtonVPN.UI.Tests.Tests.E2ETests;
 [Category("3")]
 public class DefaultConnectionTests : BaseTest
 {
-    private const string COUNTRY_CODE = "AU";
     private const string COUNTRY_TO_SEARCH = "Australia";
     private const string FASTEST_COUNTRY = "Fastest country";
     private const string STREAMING_PROFILE = "Streaming US";
     private const string STREAMING_COUNTRY = "United States";
     private const string DEFAULT_CONNECTION = "Default connection";
+
+    private const string EXCLUDED_LOCATION_AFGHANISTAN = "Afghanistan";
+    private const string EXCLUDED_LOCATION_SEARCH_QUERY = "U";
+    private const string EXCLUDED_LOCATION_UNITED_STATES = "United States";
 
     [OneTimeSetUp]
     public void SetUp()
@@ -46,12 +50,14 @@ public class DefaultConnectionTests : BaseTest
     public void DefaultConnectionTitleIsFastest()
     {
         HomeRobot
-            .Verify.DoesConnectionCardTitleEqual(FASTEST_COUNTRY)
+            .Verify.ConnectionCardTitleEquals(FASTEST_COUNTRY)
             .ConnectViaConnectionCard()
             .Verify.IsConnected()
-            .DoesConnectionCardTitleEqual(FASTEST_COUNTRY)
+            .ConnectionCardTitleEquals(FASTEST_COUNTRY)
             .Disconnect()
             .Verify.IsDisconnected();
+
+        ConfirmationRobot.DismissExcludedLocationsPrompt();
     }
 
     [Test, Order(1)]
@@ -59,26 +65,26 @@ public class DefaultConnectionTests : BaseTest
     {
         SidebarRobot
             .SearchFor(COUNTRY_TO_SEARCH)
-            .ConnectToCountry(COUNTRY_CODE);
+            .ConnectToCountry(COUNTRY_TO_SEARCH);
 
         HomeRobot
             .Verify.IsConnected()
-            .DoesConnectionCardTitleEqual(COUNTRY_TO_SEARCH);
+            .ConnectionCardTitleEquals(COUNTRY_TO_SEARCH);
         NetworkUtils.VerifyUserIsConnectedToExpectedCountry(COUNTRY_TO_SEARCH);
 
         HomeRobot.Disconnect()
             .Verify.IsDisconnected()
-            .DoesConnectionCardTitleEqual(FASTEST_COUNTRY);
+            .ConnectionCardTitleEquals(FASTEST_COUNTRY);
 
         SettingRobot
             .OpenSettings()
-            .OpenDefaultConnectionSettingsCard()
+            .OpenConnectionPreferencesSettingsCard()
             .SelectLastConnectionOption()
             .ApplySettings()
             .CloseSettings();
 
         HomeRobot
-            .Verify.DoesConnectionCardTitleEqual(COUNTRY_TO_SEARCH)
+            .Verify.ConnectionCardTitleEquals(COUNTRY_TO_SEARCH)
             .ConnectViaConnectionCard()
             .Verify.IsConnected()
             .Disconnect()
@@ -89,14 +95,34 @@ public class DefaultConnectionTests : BaseTest
     public void DefaultConnection()
     {
         HomeRobot
-            .Verify.IsDisconnected()
-            .SelectVpnConnectionOption(VpnConnectionOptions.Customized)
-            .Verify.DoesCustomizedCardTitleEqual(DEFAULT_CONNECTION);
+            .Verify.IsDisconnected();
 
         SettingRobot
-            .SelectDefaultConnectionType(VpnConnectionOptions.Fast)
-            .SelectDefaultConnectionType(VpnConnectionOptions.Random)
-            .SelectDefaultConnectionType(VpnConnectionOptions.Last);
+            .OpenSettings()
+            .OpenConnectionPreferencesSettingsCard()
+            .SelectDefaultConnectionType(VpnConnectionOption.Fast)
+            .SelectDefaultConnectionType(VpnConnectionOption.Random)
+            .SelectDefaultConnectionType(VpnConnectionOption.Last);
+    }
+
+    [Test, Order(2)]
+    public void ExcludedLocationsSelector_AllowsSelectingAndSearching()
+    {
+        SettingRobot
+            .OpenSettings()
+            .OpenConnectionPreferencesSettingsCard()
+            .OpenExcludedLocationsSelector()
+            .SelectExcludedCountry(EXCLUDED_LOCATION_AFGHANISTAN)
+            .Verify.IsRemoveExcludedLocationButtonDisplayed()
+            .Verify.IsExcludedLocationDisplayed(EXCLUDED_LOCATION_AFGHANISTAN)
+            .OpenExcludedLocationsSelector()
+            .SearchExcludedLocations(EXCLUDED_LOCATION_SEARCH_QUERY)
+            .SelectExcludedCountry(EXCLUDED_LOCATION_UNITED_STATES)
+            .Verify.IsExcludedLocationDisplayed(EXCLUDED_LOCATION_UNITED_STATES)
+            .RemoveFirstExcludedLocation()
+            .Verify.IsExcludedLocationNotDisplayed(EXCLUDED_LOCATION_AFGHANISTAN)
+            .RemoveFirstExcludedLocation()
+            .CloseSettings();
     }
 
     [OneTimeTearDown]

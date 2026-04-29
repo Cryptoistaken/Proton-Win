@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2024 Proton AG
+ * Copyright (c) 2026 Proton AG
  *
  * This file is part of ProtonVPN.
  *
@@ -18,12 +18,13 @@
  */
 
 using System.Threading;
+using System.Collections.Generic;
 using FlaUI.Core.Input;
 using FlaUI.Core.WindowsAPI;
+using NUnit.Framework;
 using ProtonVPN.UI.Tests.Enums;
-using ProtonVPN.UI.Tests.TestsHelper;
 using ProtonVPN.UI.Tests.UiTools;
-using static ProtonVPN.UI.Tests.TestsHelper.TestConstants;
+using ProtonVPN.UI.Tests.TestsHelper;
 
 namespace ProtonVPN.UI.Tests.Robots;
 
@@ -32,15 +33,13 @@ public class SettingRobot
     private const string NETSHIELD_NO_BLOCK = "netshield-0.protonvpn.net";
     private const string NETSHIELD_MALWARE_ENDPOINT = "netshield-1.protonvpn.net";
     private const string NETSHIELD_ADS_ENDPOINT = "netshield-2.protonvpn.net";
+    private static readonly string[] _netShieldAdultContentDomains = { "0-100c.cn", "0-1du.com", "0-24sexcams.com", "0-6babylee.cn", "0-900.com" };
 
     protected Element SettingsPage = Element.ByAutomationId("SettingsPage");
     protected Element ApplyButton = Element.ByAutomationId("ApplyButton");
     protected Element CloseSettingsButton = Element.ByAutomationId("CloseSettingsButton");
     protected Element ReconnectButton = Element.ByName("Reconnect");
     protected Element SettingsButton = Element.ByAutomationId("SettingsButton");
-    protected Element LastDefaultConnectionRadioButton = Element.ByAutomationId("LastDefaultConnectionRadioButton");
-    protected Element FastestDefaultConnectionRadioButton = Element.ByAutomationId("FastestDefaultConnectionRadioButton");
-    protected Element RandomDefaultConnectionRadioButton = Element.ByAutomationId("RandomDefaultConnectionRadioButton");
 
     protected Element NetShieldSettingsCard = Element.ByAutomationId("NetShieldSettingsCard");
     protected Element KillSwitchSettingsCard = Element.ByAutomationId("KillSwitchSettingsCard");
@@ -49,7 +48,9 @@ public class SettingRobot
     protected Element PortForwardingSettingsCard = Element.ByAutomationId("PortForwardingSettingsCard");
     protected Element SplitTunnelingSettingsCard = Element.ByAutomationId("SplitTunnelingSettingsCard");
     protected Element VpnAcceleratorSettingsCard = Element.ByAutomationId("VpnAcceleratorSettingsCard");
-    protected Element DefaultConnectionSettingsCard = Element.ByAutomationId("DefaultConnectionSettingsCard");
+    protected Element ConnectionPreferencesSettingsCard = Element.ByAutomationId("ConnectionPreferencesSettingsCard");
+    protected Element ExcludedLocationSelectorButton = Element.ByAutomationId("SelectorButton");
+    protected Element RemoveExcludedLocationButton = Element.ByAutomationId("RemoveExcludedLocationButton");
     protected Element PortForwardingToggle = Element.ByAutomationId("PortForwardingToggle");
     protected Element CopyPortNumberButton = Element.ByAutomationId("CopyPortNumberCondensedButton");
 
@@ -67,28 +68,35 @@ public class SettingRobot
     protected Element LicensingLabel = Element.ByAutomationId("LicensingTextBlock");
     protected Element LearnMoreButton = Element.ByName("Learn more");
     protected Element CurrentVersionLabel = Element.ByAutomationId("CurrentVersionLabel");
+    protected Element DefaultConnectionDropdown = Element.ByAutomationId("DefaultConnectionDropdown");
 
     protected Element NetshieldToggle = Element.ByAutomationId("NetshieldToggle");
     protected Element NetShieldLevelOneRadioButton = Element.ByAutomationId("NetShieldLevelOne");
-    protected Element NetShieldLevelTwoRadioButton = Element.ByAutomationId("NetShieldLevelTwo"); 
+    protected Element NetShieldLevelTwoRadioButton = Element.ByAutomationId("NetShieldLevelTwo");
     protected Element NetShieldLevelThreeRadioButton = Element.ByAutomationId("NetShieldLevelThree");
     protected Element KillSwitchToggle = Element.ByAutomationId("KillSwitchToggle");
     protected Element KillSiwtchStandardRadioButton = Element.ByAutomationId("StandardKillSwitchRadioButton");
     protected Element KillSwitchAdvancedRadioButton = Element.ByAutomationId("AdvancedKillSwitchRadioButton");
 
+    protected Element NatTypeStrictRadioButton = Element.ByAutomationId("StrictNatTypeRadioButton");
+    protected Element NatTypeModerateRadioButton = Element.ByAutomationId("ModerateNatTypeRadioButton");
+
     protected Element AutoLaunchToggle = Element.ByAutomationId("AutoLaunchToggle");
     protected Element AutoConnectToggle = Element.ByAutomationId("AutoConnectToggle");
 
+    protected Element ProtonProtocolsToggle = Element.ByName("Proton protocols").And(Element.ByClassName("NamedContainerAutomationPeer"));
     protected Element OpenVpnTcpProtocolRadioButton = Element.ByAutomationId("OpenVpnTcpProtocolRadioButton");
     protected Element OpenVpnUdpProtocolRadioButton = Element.ByAutomationId("OpenVpnUdpProtocolRadioButton");
     protected Element WireGuardUdpProtocolRadioButton = Element.ByAutomationId("WireGuardUdpProtocolRadioButton");
     protected Element WireGuardTlsProtocolRadioButton = Element.ByAutomationId("WireGuardTlsProtocolRadioButton");
     protected Element WireGuardTcpProtocolRadioButton = Element.ByAutomationId("WireGuardTcpProtocolRadioButton");
+    protected Element SmartProtocolRadioButton = Element.ByAutomationId("SmartProtocolRadioButton");
     protected Element ExitProtonPopUp = Element.ByName("Exit Proton VPN?");
 
     public SettingRobot OpenSettings()
     {
-        SettingsButton.Click();
+        Thread.Sleep(TestConstants.NavigationDelay);
+        SettingsButton.ClickUntilElementDisappears();
         Thread.Sleep(TestConstants.NavigationDelay);
         return this;
     }
@@ -154,11 +162,40 @@ public class SettingRobot
         return this;
     }
 
-    public SettingRobot OpenDefaultConnectionSettingsCard()
+    public SettingRobot OpenConnectionPreferencesSettingsCard()
     {
-        DefaultConnectionSettingsCard.ScrollIntoView();
-        DefaultConnectionSettingsCard.Click();
+        ConnectionPreferencesSettingsCard.ScrollIntoView();
+        ConnectionPreferencesSettingsCard.Click();
         Thread.Sleep(TestConstants.NavigationDelay);
+        return this;
+    }
+
+    public SettingRobot OpenExcludedLocationsSelector()
+    {
+        ExcludedLocationSelectorButton.Click();
+        Thread.Sleep(TestConstants.AnimationDelay);
+        return this;
+    }
+
+    public SettingRobot SelectExcludedCountry(string countryName)
+    {
+        Element.ByName(countryName).Click();
+        Thread.Sleep(TestConstants.AnimationDelay);
+        RemoveExcludedLocationButton.WaitUntilDisplayed();
+        return this;
+    }
+
+    public SettingRobot SearchExcludedLocations(string searchText)
+    {
+        Keyboard.Type(searchText);
+        Thread.Sleep(TestConstants.AnimationDelay);
+        return this;
+    }
+
+    public SettingRobot RemoveFirstExcludedLocation()
+    {
+        RemoveExcludedLocationButton.Click();
+        Thread.Sleep(TestConstants.AnimationDelay);
         return this;
     }
 
@@ -240,10 +277,20 @@ public class SettingRobot
         return this;
     }
 
+    public SettingRobot ToggleProtun()
+    {
+        ProtonProtocolsToggle.FindChild(Element.ByClassName("ToggleSwitch")).Toggle();
+        return this;
+    }
+
     public SettingRobot SelectProtocol(TestConstants.Protocol protocol)
     {
         switch (protocol)
         {
+            case TestConstants.Protocol.Smart:
+                SmartProtocolRadioButton.Click();
+                break;
+
             case TestConstants.Protocol.OpenVpnUdp:
                 OpenVpnUdpProtocolRadioButton.Click();
                 break;
@@ -312,6 +359,20 @@ public class SettingRobot
         return this;
     }
 
+    public SettingRobot SelectNatType(NatType natType)
+    {
+        if (natType == NatType.Strict)
+        {
+            NatTypeStrictRadioButton.Click();
+        }
+        else if (natType == NatType.Moderate)
+        {
+            NatTypeModerateRadioButton.Click();
+        }
+
+        return this;
+    }
+
     public SettingRobot SelectNetShieldMode(NetShieldMode netShieldMode)
     {
         switch (netShieldMode)
@@ -370,14 +431,12 @@ public class SettingRobot
 
     public SettingRobot SelectLastConnectionOption()
     {
-        LastDefaultConnectionRadioButton.Click();
-        return this;
+        return SelectDefaultConnectionType(VpnConnectionOption.Last);
     }
 
     public SettingRobot SelectFastestConnectionOption()
     {
-        FastestDefaultConnectionRadioButton.Click();
-        return this;
+        return SelectDefaultConnectionType(VpnConnectionOption.Fast);
     }
 
     public SettingRobot SelectProfileDefaultConnectionOption(string profileName)
@@ -388,6 +447,21 @@ public class SettingRobot
 
     public class Verifications : SettingRobot
     {
+        public Verifications IsCorrectAccountInfoDisplayed(string accountName, string accountPlan)
+        {
+            Thread.Sleep(TestConstants.OneSecondTimeout);
+            List<string> allChildren = AccountButton.GetAllChildrenNames();
+            Assert.That(allChildren, Does.Contain(accountName));
+            Assert.That(allChildren, Does.Contain(accountPlan));
+            return this;
+        }
+
+        public Verifications IsProtunEnabled()
+        {
+            ProtonProtocolsToggle.FindChild(Element.ByClassName("ToggleSwitch")).IsToggled();
+            return this;
+        }
+
         public Verifications IsNetshieldBlocking(NetShieldMode netShieldMode)
         {
             NetworkUtils.FlushDns();
@@ -398,17 +472,27 @@ public class SettingRobot
                 case NetShieldMode.BlockMalwareOnly:
                     CommonAssertions.AssertDnsIsNotResolved(NETSHIELD_MALWARE_ENDPOINT);
                     CommonAssertions.AssertDnsIsResolved(NETSHIELD_ADS_ENDPOINT);
+                    CommonAssertions.AssertDnsIsResolved(_netShieldAdultContentDomains[0]);
                     break;
                 case NetShieldMode.BlockAdsMalwareTrackers:
                     CommonAssertions.AssertDnsIsNotResolved(NETSHIELD_MALWARE_ENDPOINT);
                     CommonAssertions.AssertDnsIsNotResolved(NETSHIELD_ADS_ENDPOINT);
+                    CommonAssertions.AssertDnsIsResolved(_netShieldAdultContentDomains[0]);
+                    break;
+                case NetShieldMode.BlockAdsMalwareTrackersAdultContent:
+                    CommonAssertions.AssertDnsIsNotResolved(NETSHIELD_MALWARE_ENDPOINT);
+                    CommonAssertions.AssertDnsIsNotResolved(NETSHIELD_ADS_ENDPOINT);
+                    foreach (string adultContentDomain in _netShieldAdultContentDomains)
+                    {
+                        CommonAssertions.AssertDnsIsNotResolved(adultContentDomain);
+                    }
                     break;
             }
 
             return this;
         }
 
-        public Verifications IsNetshieldDisableStateDisplayed()
+        public Verifications IsNetshieldDisabledStateDisplayed()
         {
             NetShieldSettingsCard.FindChild(Element.ByName("Off")).WaitUntilDisplayed();
             return this;
@@ -476,27 +560,47 @@ public class SettingRobot
             AutoConnectToggle.IsToggled();
             return this;
         }
+
+        public Verifications IsExcludedLocationDisplayed(string countryName)
+        {
+            SettingsPage.FindDescendant(Element.ByName(countryName)).WaitUntilExists();
+            return this;
+        }
+
+        public Verifications IsExcludedLocationNotDisplayed(string countryName)
+        {
+            SettingsPage.FindDescendant(Element.ByName(countryName)).DoesNotExist();
+            return this;
+        }
+
+        public Verifications IsRemoveExcludedLocationButtonDisplayed()
+        {
+            RemoveExcludedLocationButton.WaitUntilDisplayed();
+            return this;
+        }
     }
 
-    public SettingRobot SelectDefaultConnectionType(VpnConnectionOptions option)
+    public SettingRobot SelectDefaultConnectionType(VpnConnectionOption option)
     {
-        switch (option)
+        Element settingsDefaultConnectionComboBox = SettingsPage
+            .FindDescendant(DefaultConnectionDropdown);
+        
+        settingsDefaultConnectionComboBox.Click();
+        Thread.Sleep(TestConstants.AnimationDelay);
+
+        string optionName = option switch
         {
-            case VpnConnectionOptions.Fast:
-                FastestDefaultConnectionRadioButton.Click();
-                FastestDefaultConnectionRadioButton.AssertChecked();
-                break;
+            VpnConnectionOption.Fast => "Fastest country",
+            VpnConnectionOption.Random => "Random country",
+            VpnConnectionOption.Last => "Last connection",
+            _ => throw new System.NotImplementedException($"VpnConnectionOption '{option}' is not supported in Settings."),
+        };
 
-            case VpnConnectionOptions.Random:
-                RandomDefaultConnectionRadioButton.Click();
-                RandomDefaultConnectionRadioButton.AssertChecked();
-                break;
+        Element.ByName(optionName).Click();
+        Thread.Sleep(TestConstants.AnimationDelay);
 
-            case VpnConnectionOptions.Last:
-                LastDefaultConnectionRadioButton.Click();
-                LastDefaultConnectionRadioButton.AssertChecked();
-                break;
-        }
+        settingsDefaultConnectionComboBox.ComboBoxSelectedEquals(optionName);
+
         return this;
     }
 

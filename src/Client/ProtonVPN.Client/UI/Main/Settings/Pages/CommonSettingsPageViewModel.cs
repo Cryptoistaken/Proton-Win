@@ -21,7 +21,6 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Controls;
 using ProtonVPN.Client.Common.Models;
-using ProtonVPN.Client.Contracts.Services.Activation;
 using ProtonVPN.Client.Contracts.Services.Browsing;
 using ProtonVPN.Client.Core.Bases;
 using ProtonVPN.Client.Core.Messages;
@@ -208,12 +207,6 @@ public partial class CommonSettingsPageViewModel : SettingsPageViewModelBase
     public Task ReportIssueAsync()
     {
         return _reportIssueWindowActivator.ActivateAsync();
-    }
-
-    [RelayCommand]
-    private async Task NavigateToDefaultConnectionPageAsync()
-    {
-        await ParentViewNavigator.NavigateToDefaultConnectionSettingsViewAsync();
     }
 
     [RelayCommand]

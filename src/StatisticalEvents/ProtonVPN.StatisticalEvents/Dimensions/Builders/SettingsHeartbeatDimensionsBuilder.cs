@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Proton AG
+ * Copyright (c) 2026 Proton AG
  *
  * This file is part of ProtonVPN.
  *
@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using ProtonVPN.Client.Settings.Contracts;
+using ProtonVPN.Client.Settings.Contracts.Models;
 using ProtonVPN.StatisticalEvents.Dimensions.Extensions;
 using ProtonVPN.StatisticalEvents.Dimensions.Mappers;
 using ProtonVPN.StatisticalEvents.Dimensions.Mappers.Settings;
@@ -37,6 +38,10 @@ public class SettingsHeartbeatDimensionsBuilder : ISettingsHeartbeatDimensionsBu
     private readonly ISplitTunnelingIpsCountDimensionMapper _splitTunnelingIpsCountDimensionMapper;
     private readonly IWindowSizeCategoryDimensionMapper _windowSizeCategoryDimensionMapper;
     private readonly IUiThemeDimensionMapper _uiThemeDimensionMapper;
+    private readonly INetShieldModeDimensionMapper _netShieldModeDimensionMapper;
+    private readonly IKillSwitchModeDimensionMapper _killSwitchModeDimensionMapper;
+    private readonly INatTypeDimensionMapper _natTypeDimensionMapper;
+    private readonly IExcludedLocationsCountDimensionMapper _excludedLocationsCountDimensionMapper;
 
     public SettingsHeartbeatDimensionsBuilder(
         ISettings settings,
@@ -48,7 +53,11 @@ public class SettingsHeartbeatDimensionsBuilder : ISettingsHeartbeatDimensionsBu
         ISplitTunnelingAppsCountDimensionMapper splitTunnelingAppsCountDimensionMapper,
         ISplitTunnelingIpsCountDimensionMapper splitTunnelingIpsCountDimensionMapper,
         IWindowSizeCategoryDimensionMapper windowSizeCategoryDimensionMapper,
-        IUiThemeDimensionMapper uiThemeDimensionMapper)
+        IUiThemeDimensionMapper uiThemeDimensionMapper,
+        INetShieldModeDimensionMapper netShieldModeDimensionMapper,
+        IKillSwitchModeDimensionMapper killSwitchModeDimensionMapper,
+        INatTypeDimensionMapper natTypeDimensionMapper,
+        IExcludedLocationsCountDimensionMapper excludedLocationsCountDimensionMapper)
     {
         _settings = settings;
         _booleanDimensionMapper = booleanDimensionMapper;
@@ -60,10 +69,16 @@ public class SettingsHeartbeatDimensionsBuilder : ISettingsHeartbeatDimensionsBu
         _splitTunnelingIpsCountDimensionMapper = splitTunnelingIpsCountDimensionMapper;
         _windowSizeCategoryDimensionMapper = windowSizeCategoryDimensionMapper;
         _uiThemeDimensionMapper = uiThemeDimensionMapper;
+        _netShieldModeDimensionMapper = netShieldModeDimensionMapper;
+        _killSwitchModeDimensionMapper = killSwitchModeDimensionMapper;
+        _natTypeDimensionMapper = natTypeDimensionMapper;
+        _excludedLocationsCountDimensionMapper = excludedLocationsCountDimensionMapper;
     }
 
     public Dictionary<string, string> Build()
     {
+        List<ExcludedLocation> excludedLocations = _settings.ExcludedLocationsList ?? [];
+
         Dictionary<string, string> dimensionDictionary = new()
         {
             { "is_auto_connect_enabled", _booleanDimensionMapper.Map(_settings.IsAutoConnectEnabled) },
@@ -87,7 +102,12 @@ public class SettingsHeartbeatDimensionsBuilder : ISettingsHeartbeatDimensionsBu
                 _settings.SplitTunnelingStandardIpAddressesList,
                 _settings.SplitTunnelingInverseIpAddressesList) },
             { "window_size_category", _windowSizeCategoryDimensionMapper.Map(_settings.WindowWidth, _settings.WindowHeight, _settings.IsWindowMaximized) },
-        }; 
+            { "netshield_level", _netShieldModeDimensionMapper.Map(_settings.IsNetShieldEnabled, _settings.NetShieldMode) },
+            { "kill_switch_level", _killSwitchModeDimensionMapper.Map(_settings.IsKillSwitchEnabled, _settings.KillSwitchMode) },
+            { "nat_type", _natTypeDimensionMapper.Map(_settings.NatType) },
+            { "excluded_countries_count", _excludedLocationsCountDimensionMapper.MapCountries(excludedLocations) },
+            { "excluded_cities_count", _excludedLocationsCountDimensionMapper.MapCitiesAndStates(excludedLocations) },
+        };
 
         return dimensionDictionary;
     }

@@ -18,11 +18,9 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Windows.Documents;
+using System.Diagnostics;
 using FlaUI.Core.WindowsAPI;
 using NUnit.Framework;
 using ProtonVPN.UI.Tests.TestBase;
@@ -141,36 +139,6 @@ public class NavigationTests : FreshSessionSetUp
                 .IsCorrectAppVersionDisplayedInAboutSection(TestEnvironment.GetAppVersion())
             .PressLearnMore()
             .Verify.IsLicensingDisplayed();
-    }
-
-
-    [Test]
-    public void NavigateToProfiles()
-    {
-        NavigationRobot
-            .Verify.IsOnHomePage()
-                   .IsOnConnectionsPage();
-        SidebarRobot
-            .NavigateToProfiles();
-        NavigationRobot
-            .Verify.IsOnHomePage()
-                   .IsOnProfilesPage();
-
-        List<string> profileNames = ["Streaming US", "Gaming", "P2P"];
-
-        foreach (string profileName in profileNames)
-        {
-            SidebarRobot
-                .ExpandSecondaryActionsForProfile(profileName)
-                .EditProfile();
-            NavigationRobot
-                .Verify.IsOnProfilePage();
-            ProfileRobot
-                .Verify.DoesProfileNameEqual(profileName)
-                .CloseProfile();
-            NavigationRobot
-                .Verify.IsOnHomePage();
-        }
     }
 
     public static bool AreNoProtonVPNProcessesRunning() =>

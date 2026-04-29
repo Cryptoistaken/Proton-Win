@@ -19,9 +19,10 @@
 
 using System;
 using System.Threading;
+using FlaUI.Core.Definitions;
 using FlaUI.Core.AutomationElements;
-using ProtonVPN.UI.Tests.TestsHelper;
 using ProtonVPN.UI.Tests.UiTools;
+using ProtonVPN.UI.Tests.TestsHelper;
 
 namespace ProtonVPN.UI.Tests.Robots;
 
@@ -35,26 +36,20 @@ public class SupportRobot
     protected Element NoLogsAttachedWarning => Element.ByAutomationId("Message");
     protected Element IncludeLogsCheckbox => Element.ByAutomationId("IncludeLogsCheckbox");
     protected Element EmailInputField => Element.ByAutomationId("EmailInputField");
+    protected Element DoneBtn => Element.ByName("Done");
+    protected Element CloseBtn => Element.ByAutomationId("Close");
+    protected Element ConnectionHelpHeader => Element.ByName("Connection help");
 
     public SupportRobot(Func<Window?> windowFunc)
     {
         _windowFunc = windowFunc;
     }
 
-    public SupportRobot FillBugReportForm(string bugType)
+    public SupportRobot FillBugReportForm()
     {
-        // Allow some time for the framework to process UI.
-        // Elements were found, but clicks were performed too early.
-        Thread.Sleep(TestConstants.OneSecondTimeout);
-
-        Element
-            .ByName(bugType)
-            .WaitUntilExists(TestConstants.FiveSecondsTimeout)?
-            .DoubleClick();
-
-        ContactUsButton.Invoke();
+        Thread.Sleep(TestConstants.NavigationDelay);
         EmailInputField.WaitUntilDisplayed();
-        AutomationElement[]? bugReportInputFields = _windowFunc()?.FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Edit));
+        AutomationElement[]? bugReportInputFields = _windowFunc()?.FindAllDescendants(cf => cf.ByControlType(ControlType.Edit));
 
         if (bugReportInputFields is null || bugReportInputFields.Length == 0)
         {
@@ -75,6 +70,20 @@ public class SupportRobot
         return this;
     }
 
+    public SupportRobot SelectBugType(string bugType)
+    {
+        Thread.Sleep(TestConstants.TwoSecondsTimeout);
+        Element.ByName(bugType).WaitUntilExists(TestConstants.FiveSecondsTimeout)?.DoubleClick();
+        return this;
+    }
+
+    public SupportRobot ClickContactUs()
+    {
+        Thread.Sleep(TestConstants.NavigationDelay);
+        ContactUsButton.Invoke();
+        return this;
+    }
+
     public SupportRobot SendBugReport()
     {
         SendReportButton.Click();
@@ -87,6 +96,12 @@ public class SupportRobot
         return this;
     }
 
+    public SupportRobot CloseSupportWindow()
+    {
+        CloseBtn.Click();
+        return this;
+    }
+
     public class Verifications : SupportRobot
     {
         public Verifications(Func<Window?> windowFunc) : base(windowFunc)
@@ -96,6 +111,14 @@ public class SupportRobot
         public Verifications IsSendingSuccessful()
         {
             ReportSentLabel.WaitUntilExists(TestConstants.ThirtySecondsTimeout);
+            DoneBtn.Click();
+            Thread.Sleep(TestConstants.NavigationDelay);
+            return this;
+        }
+
+        public Verifications IsConnectionHelpDisplayed()
+        {
+            ConnectionHelpHeader.WaitUntilExists(TestConstants.ThirtySecondsTimeout);
             return this;
         }
 
