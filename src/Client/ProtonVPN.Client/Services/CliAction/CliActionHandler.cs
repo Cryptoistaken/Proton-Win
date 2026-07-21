@@ -113,6 +113,7 @@ public class CliActionHandler
         using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
         while (!cts.Token.IsCancellationRequested)
         {
+            await _vpnServiceCaller.RepeatStateAsync();
             await Task.Delay(500, cts.Token);
             if (_connectionManager.IsConnected)
             {
@@ -124,7 +125,6 @@ public class CliActionHandler
                 Console.Error.WriteLine("Connection failed.");
                 return false;
             }
-            await _vpnServiceCaller.RepeatStateAsync();
         }
 
         Console.Error.WriteLine("Connection timed out.");
@@ -145,13 +145,13 @@ public class CliActionHandler
         using CancellationTokenSource cts = new(TimeSpan.FromSeconds(15));
         while (!cts.Token.IsCancellationRequested)
         {
+            await _vpnServiceCaller.RepeatStateAsync();
             await Task.Delay(500, cts.Token);
             if (_connectionManager.IsDisconnected)
             {
                 Console.Out.WriteLine("Disconnected.");
                 return true;
             }
-            await _vpnServiceCaller.RepeatStateAsync();
         }
 
         Console.Error.WriteLine("Disconnect timed out.");
