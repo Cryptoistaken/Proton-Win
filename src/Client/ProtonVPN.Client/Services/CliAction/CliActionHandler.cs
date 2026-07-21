@@ -28,7 +28,7 @@ public class CliActionHandler
         _logger = logger;
     }
 
-    public CliAction DetectAction(string[] args)
+    public CliActionParams DetectAction(string[] args)
     {
         bool isWait = false;
         CliActionType type = CliActionType.None;
@@ -62,10 +62,10 @@ public class CliActionHandler
             }
         }
 
-        return new CliAction(type, argument, isWait);
+        return new CliActionParams(type, argument, isWait);
     }
 
-    public async Task<bool> ExecuteActionAsync(CliAction action)
+    public async Task<bool> ExecuteActionAsync(CliActionParams action)
     {
         try
         {
@@ -89,7 +89,7 @@ public class CliActionHandler
         }
     }
 
-    private async Task<bool> ConnectAsync(CliAction action)
+    private async Task<bool> ConnectAsync(CliActionParams action)
     {
         IConnectionIntent? intent = ParseLocation(action.Argument);
 
@@ -131,7 +131,7 @@ public class CliActionHandler
         return false;
     }
 
-    private async Task<bool> DisconnectAsync(CliAction action)
+    private async Task<bool> DisconnectAsync(CliActionParams action)
     {
         _logger.Info<AppLog>("CLI disconnect");
         await _connectionManager.DisconnectAsync(VpnTriggerDimension.Auto);

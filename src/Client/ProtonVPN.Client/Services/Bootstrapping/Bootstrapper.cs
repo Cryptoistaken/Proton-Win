@@ -62,7 +62,7 @@ public class Bootstrapper : IBootstrapper
     private readonly IUIThreadDispatcher _uiThreadDispatcher;
 
     private bool _isOpenOnDesktopRequested;
-    private CliAction? _cliAction;
+    private CliActionParams? _cliAction;
 
     public Bootstrapper(
         IClientInstallsReporter clientInstallsReporter,
@@ -168,7 +168,7 @@ public class Bootstrapper : IBootstrapper
             string[]? redirectedArgs = CliActionHandler.ReadAndDeleteArgsTempFile();
             if (redirectedArgs is { Length: > 0 })
             {
-                CliAction cliAction = Resolve<CliActionHandler>().DetectAction(redirectedArgs);
+                CliActionParams cliAction = Resolve<CliActionHandler>().DetectAction(redirectedArgs);
                 if (cliAction.Type != CliActionType.None)
                 {
                     await Resolve<CliActionHandler>().ExecuteActionAsync(cliAction);
@@ -288,7 +288,7 @@ public class Bootstrapper : IBootstrapper
 
         if (cliType.HasValue)
         {
-            _cliAction = new CliAction(cliType.Value, cliArgument, cliType.Value == CliActionType.Status ? false : isWait);
+            _cliAction = new CliActionParams(cliType.Value, cliArgument, cliType.Value == CliActionType.Status ? false : isWait);
         }
 
         HandleProtonInstallerArguments(args);

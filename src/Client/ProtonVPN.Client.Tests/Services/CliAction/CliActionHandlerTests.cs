@@ -35,7 +35,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldReturnNone_WhenEmptyArgs()
     {
-        CliAction action = _handler.DetectAction([]);
+        CliActionParams action = _handler.DetectAction([]);
         Assert.AreEqual(CliActionType.None, action.Type);
         Assert.IsNull(action.Argument);
         Assert.IsFalse(action.Wait);
@@ -44,7 +44,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldReturnConnect_WhenConnectWithCountry()
     {
-        CliAction action = _handler.DetectAction(["--connect", "jp"]);
+        CliActionParams action = _handler.DetectAction(["--connect", "jp"]);
         Assert.AreEqual(CliActionType.Connect, action.Type);
         Assert.AreEqual("jp", action.Argument);
         Assert.IsFalse(action.Wait);
@@ -53,7 +53,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldReturnConnect_WhenConnectWithoutCountry()
     {
-        CliAction action = _handler.DetectAction(["--connect"]);
+        CliActionParams action = _handler.DetectAction(["--connect"]);
         Assert.AreEqual(CliActionType.Connect, action.Type);
         Assert.IsNull(action.Argument);
         Assert.IsFalse(action.Wait);
@@ -62,7 +62,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldSetWait_WhenWaitAfterConnect()
     {
-        CliAction action = _handler.DetectAction(["--connect", "jp", "--wait"]);
+        CliActionParams action = _handler.DetectAction(["--connect", "jp", "--wait"]);
         Assert.AreEqual(CliActionType.Connect, action.Type);
         Assert.AreEqual("jp", action.Argument);
         Assert.IsTrue(action.Wait);
@@ -71,7 +71,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldSetWait_WhenWaitBeforeConnect()
     {
-        CliAction action = _handler.DetectAction(["--wait", "--connect", "jp"]);
+        CliActionParams action = _handler.DetectAction(["--wait", "--connect", "jp"]);
         Assert.AreEqual(CliActionType.Connect, action.Type);
         Assert.AreEqual("jp", action.Argument);
         Assert.IsTrue(action.Wait);
@@ -80,7 +80,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldNotTreatWaitAsCountry_WhenWaitAfterConnectWithoutCountry()
     {
-        CliAction action = _handler.DetectAction(["--connect", "--wait"]);
+        CliActionParams action = _handler.DetectAction(["--connect", "--wait"]);
         Assert.AreEqual(CliActionType.Connect, action.Type);
         Assert.IsNull(action.Argument);
         Assert.IsTrue(action.Wait);
@@ -89,7 +89,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldReturnDisconnect()
     {
-        CliAction action = _handler.DetectAction(["--disconnect"]);
+        CliActionParams action = _handler.DetectAction(["--disconnect"]);
         Assert.AreEqual(CliActionType.Disconnect, action.Type);
         Assert.IsNull(action.Argument);
         Assert.IsFalse(action.Wait);
@@ -98,7 +98,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldReturnDisconnect_WithWait()
     {
-        CliAction action = _handler.DetectAction(["--disconnect", "--wait"]);
+        CliActionParams action = _handler.DetectAction(["--disconnect", "--wait"]);
         Assert.AreEqual(CliActionType.Disconnect, action.Type);
         Assert.IsTrue(action.Wait);
     }
@@ -106,7 +106,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldReturnStatus()
     {
-        CliAction action = _handler.DetectAction(["--status"]);
+        CliActionParams action = _handler.DetectAction(["--status"]);
         Assert.AreEqual(CliActionType.Status, action.Type);
         Assert.IsNull(action.Argument);
         Assert.IsFalse(action.Wait);
@@ -115,7 +115,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldReturnNone_WhenWaitOnly()
     {
-        CliAction action = _handler.DetectAction(["--wait"]);
+        CliActionParams action = _handler.DetectAction(["--wait"]);
         Assert.AreEqual(CliActionType.None, action.Type);
         Assert.IsTrue(action.Wait);
     }
@@ -123,7 +123,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldBeCaseInsensitive()
     {
-        CliAction action = _handler.DetectAction(["--CONNECT", "JP", "--WAIT"]);
+        CliActionParams action = _handler.DetectAction(["--CONNECT", "JP", "--WAIT"]);
         Assert.AreEqual(CliActionType.Connect, action.Type);
         Assert.AreEqual("JP", action.Argument);
         Assert.IsTrue(action.Wait);
@@ -132,7 +132,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public void DetectAction_ShouldUseLastAction_WhenMultipleActions()
     {
-        CliAction action = _handler.DetectAction(["--connect", "--disconnect"]);
+        CliActionParams action = _handler.DetectAction(["--connect", "--disconnect"]);
         Assert.AreEqual(CliActionType.Disconnect, action.Type);
     }
 
@@ -141,7 +141,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public async Task ExecuteActionAsync_ShouldCallConnectWithFastestIntent_WhenNoArgument()
     {
-        CliAction action = new(CliActionType.Connect, null, false);
+        CliActionParams action = new(CliActionType.Connect, null, false);
 
         await _handler.ExecuteActionAsync(action);
 
@@ -153,7 +153,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public async Task ExecuteActionAsync_ShouldCallConnectWithCountryIntent_WhenTwoLetterCode()
     {
-        CliAction action = new(CliActionType.Connect, "US", false);
+        CliActionParams action = new(CliActionType.Connect, "US", false);
 
         await _handler.ExecuteActionAsync(action);
 
@@ -165,7 +165,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public async Task ExecuteActionAsync_ShouldCallConnectWithRandomIntent_WhenRandom()
     {
-        CliAction action = new(CliActionType.Connect, "random", false);
+        CliActionParams action = new(CliActionType.Connect, "random", false);
 
         await _handler.ExecuteActionAsync(action);
 
@@ -177,7 +177,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public async Task ExecuteActionAsync_ShouldReturnFalse_WhenUnknownLocation()
     {
-        CliAction action = new(CliActionType.Connect, "XYZ", false);
+        CliActionParams action = new(CliActionType.Connect, "XYZ", false);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -188,7 +188,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public async Task ExecuteActionAsync_ShouldReturnFalse_WhenSingleCharLocation()
     {
-        CliAction action = new(CliActionType.Connect, "x", false);
+        CliActionParams action = new(CliActionType.Connect, "x", false);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -198,7 +198,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public async Task ExecuteActionAsync_ShouldReturnTrue_WhenConnectWithoutWait()
     {
-        CliAction action = new(CliActionType.Connect, null, false);
+        CliActionParams action = new(CliActionType.Connect, null, false);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -209,7 +209,7 @@ public class CliActionHandlerTests
     public async Task ExecuteActionAsync_ShouldWaitForConnection_WhenConnectWithWait()
     {
         _connectionManager.IsConnected.Returns(true);
-        CliAction action = new(CliActionType.Connect, null, true);
+        CliActionParams action = new(CliActionType.Connect, null, true);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -221,7 +221,7 @@ public class CliActionHandlerTests
     {
         _connectionManager.IsConnected.Returns(false);
         _connectionManager.IsDisconnected.Returns(true);
-        CliAction action = new(CliActionType.Connect, null, true);
+        CliActionParams action = new(CliActionType.Connect, null, true);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -232,7 +232,7 @@ public class CliActionHandlerTests
     public async Task ExecuteActionAsync_ShouldRepeatState_WhenWaiting()
     {
         _connectionManager.IsConnected.Returns(true);
-        CliAction action = new(CliActionType.Connect, null, true);
+        CliActionParams action = new(CliActionType.Connect, null, true);
 
         await _handler.ExecuteActionAsync(action);
 
@@ -244,7 +244,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public async Task ExecuteActionAsync_ShouldCallDisconnect()
     {
-        CliAction action = new(CliActionType.Disconnect, null, false);
+        CliActionParams action = new(CliActionType.Disconnect, null, false);
 
         await _handler.ExecuteActionAsync(action);
 
@@ -254,7 +254,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public async Task ExecuteActionAsync_ShouldReturnTrue_WhenDisconnectWithoutWait()
     {
-        CliAction action = new(CliActionType.Disconnect, null, false);
+        CliActionParams action = new(CliActionType.Disconnect, null, false);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -265,7 +265,7 @@ public class CliActionHandlerTests
     public async Task ExecuteActionAsync_ShouldWaitForDisconnect_WhenDisconnectWithWait()
     {
         _connectionManager.IsDisconnected.Returns(true);
-        CliAction action = new(CliActionType.Disconnect, null, true);
+        CliActionParams action = new(CliActionType.Disconnect, null, true);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -278,7 +278,7 @@ public class CliActionHandlerTests
     public async Task ExecuteActionAsync_ShouldPrintDisconnected_WhenStatusIsDisconnected()
     {
         _connectionManager.ConnectionStatus.Returns(ConnectionStatus.Disconnected);
-        CliAction action = new(CliActionType.Status, null, false);
+        CliActionParams action = new(CliActionType.Status, null, false);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -289,7 +289,7 @@ public class CliActionHandlerTests
     public async Task ExecuteActionAsync_ShouldPrintConnecting_WhenStatusIsConnecting()
     {
         _connectionManager.ConnectionStatus.Returns(ConnectionStatus.Connecting);
-        CliAction action = new(CliActionType.Status, null, false);
+        CliActionParams action = new(CliActionType.Status, null, false);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -312,7 +312,7 @@ public class CliActionHandlerTests
     {
         _connectionManager.ConnectionStatus.Returns(ConnectionStatus.Connected);
         _connectionManager.CurrentConnectionDetails.Returns((ConnectionDetails?)null);
-        CliAction action = new(CliActionType.Status, null, false);
+        CliActionParams action = new(CliActionType.Status, null, false);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -324,7 +324,7 @@ public class CliActionHandlerTests
     [TestMethod]
     public async Task ExecuteActionAsync_ShouldReturnFalse_WhenTypeIsNone()
     {
-        CliAction action = new(CliActionType.None, null, false);
+        CliActionParams action = new(CliActionType.None, null, false);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
@@ -338,7 +338,7 @@ public class CliActionHandlerTests
     {
         _connectionManager.When(m => m.ConnectAsync(Arg.Any<VpnTriggerDimension>(), Arg.Any<IConnectionIntent>()))
             .Throw(new InvalidOperationException("test error"));
-        CliAction action = new(CliActionType.Connect, null, false);
+        CliActionParams action = new(CliActionType.Connect, null, false);
 
         bool result = await _handler.ExecuteActionAsync(action);
 
