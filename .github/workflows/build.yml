@@ -90,6 +90,7 @@ jobs:
         run: |
           dotnet publish src\Client\ProtonVPN.Client\ProtonVPN.Client.csproj -c Release -r win-x64 --self-contained -o publish/app
           dotnet publish src\ProtonVPN.Service\ProtonVPN.Service.csproj -c Release -r win-x64 --self-contained -o publish/service
+          Copy-Item "src\bin\win-x64\publish\*" "publish\service" -Recurse -Force -ErrorAction SilentlyContinue
 
       - uses: actions/upload-artifact@v4
         with:
