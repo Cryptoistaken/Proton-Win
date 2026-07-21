@@ -128,6 +128,12 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
 
+      - name: Create placeholder data assets
+        shell: cmd
+        run: |
+          if not exist data mkdir data
+          if not exist data\ipv6_chaos_prefixtree.bin echo. 2>data\ipv6_chaos_prefixtree.bin
+
       - name: Build installer
         shell: cmd
         run: |
