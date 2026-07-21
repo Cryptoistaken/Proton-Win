@@ -46,22 +46,21 @@ if "%~1"=="publish" (
 )
 
 set buildParams=/p:PlatformToolset=v143 /p:Configuration=Release /p:OutDir=%resourcesDir% /clp:ErrorsOnly
-if defined ATL_INCLUDE set buildParams=%buildParams% /p:AdditionalIncludeDirectories="%ATL_INCLUDE%"
 set x86buildParams=%buildParams% /p:Platform=Win32
 set x64buildParams=%buildParams% /p:Platform=%PLATFORM%
 
 if "%~2" NEQ "srponly" (
     echo compiling ProtonVPN.IPFilter.dll %time%
-    msbuild src\ProtonVPN.IpFilter\ProtonVPN.IpFilter.vcxproj %x64buildParams% || exit /b %ERRORLEVEL%
+    msbuild src\ProtonVPN.IpFilter\ProtonVPN.IpFilter.vcxproj %x64buildParams% || exit /b 1
 
     echo compiling ProtonVPN.NetworkUtil.dll %time%
-    msbuild src\ProtonVPN.NetworkUtil\ProtonVPN.NetworkUtil.vcxproj %x64buildParams% || exit /b %ERRORLEVEL%
+    msbuild src\ProtonVPN.NetworkUtil\ProtonVPN.NetworkUtil.vcxproj %x64buildParams% || exit /b 1
 
     echo compiling ProtonVPN.InstallActions.x86.dll %time%
-    msbuild src\ProtonVPN.InstallActions\ProtonVPN.InstallActions.vcxproj %x86buildParams% || exit /b %ERRORLEVEL%
+    msbuild src\ProtonVPN.InstallActions\ProtonVPN.InstallActions.vcxproj %x86buildParams% || exit /b 1
 
     echo compiling ProtonVPN.InstallActions.dll %time%
-    msbuild src\ProtonVPN.InstallActions\ProtonVPN.InstallActions.vcxproj %x64buildParams% || exit /b %ERRORLEVEL%
+    msbuild src\ProtonVPN.InstallActions\ProtonVPN.InstallActions.vcxproj %x64buildParams% || exit /b 1
 
     echo compiling LocalAgent.dll %time%
     
@@ -104,7 +103,7 @@ echo Building %srpFileName% %time%
 
 pushd %currentDir%src\proton-rs-srp-cffi
 
-cargo build --release || exit /b %ERRORLEVEL%
+cargo build --release || exit /b 1
 
 xcopy .\target\release\%srpFileName% %mainDir% /y
 
@@ -114,7 +113,7 @@ echo Building %binaryStatusFileName% %time%
 
 pushd %currentDir%src\proton-vpn-binary-status
 
-cargo build --release --features cffi || exit /b %ERRORLEVEL%
+cargo build --release --features cffi || exit /b 1
 
 xcopy .\target\release\%binaryStatusFileName% %mainDir% /y
 
