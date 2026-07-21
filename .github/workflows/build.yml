@@ -85,6 +85,14 @@ jobs:
             }
           }
 
+      - name: Restore NuGet packages for native C++ projects
+        shell: cmd
+        run: |
+          where nuget >nul 2>nul || choco install nuget-commandline -y --no-progress
+          nuget restore src\ProtonVPN.IpFilter\ProtonVPN.IpFilter.vcxproj -PackagesDirectory packages
+          nuget restore src\ProtonVPN.NetworkUtil\ProtonVPN.NetworkUtil.vcxproj -PackagesDirectory packages
+          nuget restore src\ProtonVPN.InstallActions\ProtonVPN.InstallActions.vcxproj -PackagesDirectory packages
+
       - name: Build native dependencies
         shell: cmd
         run: |
