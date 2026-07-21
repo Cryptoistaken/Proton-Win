@@ -32,7 +32,7 @@ jobs:
         run: dotnet build src\Client\ProtonVPN.Client.Tests\ProtonVPN.Client.Tests.csproj --no-restore -c Release /p:Platform=x64
 
       - name: Run unit tests
-        run: dotnet test src\Client\ProtonVPN.Client.Tests\bin\x64\Release\ProtonVPN.Client.Tests.dll --no-restore --no-build --logger "console;verbosity=normal"
+        run: dotnet test src\Client\ProtonVPN.Client.Tests\ProtonVPN.Client.Tests.csproj --no-restore --no-build -c Release /p:Platform=x64 --logger "console;verbosity=normal"
 
   full-build:
     if: github.ref_name == 'main' || startsWith(github.ref_name, 'release/')
