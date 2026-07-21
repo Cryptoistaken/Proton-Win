@@ -100,7 +100,7 @@ jobs:
         run: |
           :: Disable code signing (not available on forks)
           powershell -Command "(gc Setup\SetupBase.iss) -replace '^SignTool=.*', '; SignTool=DISABLED' | sc Setup\SetupBase.iss"
-          set BUILD_PATH=..\publish\service
+          set BUILD_PATH=publish\service
           iscc Setup\Setup.x64.iss
 
       - uses: actions/upload-artifact@v4
