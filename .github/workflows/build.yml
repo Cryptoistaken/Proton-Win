@@ -133,6 +133,8 @@ jobs:
         run: |
           if not exist data mkdir data
           if not exist data\ipv6_chaos_prefixtree.bin echo. 2>data\ipv6_chaos_prefixtree.bin
+          if not exist src\bin\win-x64\publish mkdir src\bin\win-x64\publish
+          if not exist src\bin\win-x64\publish\proton_vpn_ipv6chaos.dll echo. 2>src\bin\win-x64\publish\proton_vpn_ipv6chaos.dll
 
       - name: Build installer
         shell: cmd
