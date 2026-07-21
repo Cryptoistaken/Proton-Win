@@ -57,22 +57,16 @@ jobs:
 
       - uses: microsoft/setup-msbuild@v2
 
-      - name: Install C++ ATL (required for NetworkUtil)
+      - name: Find ATL headers
         shell: pwsh
         run: |
-          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-
-          $vsPath = & $vswhere -products * -requires Microsoft.Component.MSBuild -property installationPath -latest
-          Write-Host "VS install path: $vsPath"
-
-          # Always run vs_installer (idempotent) — fixes VS include path registration
-          Write-Host "Installing C++ ATL component..."
-          $p = Start-Process $installer -ArgumentList @('modify', "--installPath", $vsPath, '--add', 'Microsoft.VisualStudio.Component.VC.ATL', '--quiet', '--wait', '--norestart', '--nocache') -Wait -PassThru -NoNewWindow
-          Write-Host "vs_installer exit code: $($p.ExitCode)"
-          if ($p.ExitCode -notin @(0, 3010)) { throw "ATL install failed with code $($p.ExitCode)" }
-
-          Write-Host "C++ ATL installed"
+          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -products * -requires Microsoft.Component.MSBuild -property installationPath -latest
+          Write-Host "VS path: $vsPath"
+          $atlHeader = Get-ChildItem (Join-Path $vsPath "VC\Tools\MSVC") -Recurse -Filter "atlbase.h" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $atlHeader) { throw "atlbase.h not found under VS VC\Tools\MSVC" }
+          $atlInclude = $atlHeader.Directory.FullName
+          Write-Host "ATL include: $atlInclude"
+          Add-Content $env:GITHUB_ENV "ATL_INCLUDE=$atlInclude"
 
       - name: Install MinGW-w64 (for Go CGO)
         run: |
@@ -92,9 +86,12 @@ jobs:
 
       - name: Build native dependencies
         shell: cmd
-        run: BuildDependencies.bat publish
+        run: |
+          set INCLUDE=%INCLUDE%;%ATL_INCLUDE%
+          BuildDependencies.bat publish
         env:
           PLATFORM: x64
+          ATL_INCLUDE: ${{ env.ATL_INCLUDE }}
 
       - name: Restore solution
         run: dotnet restore ProtonVPN.slnx
