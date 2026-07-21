@@ -60,13 +60,23 @@ jobs:
       - name: Install C++ ATL (required for NetworkUtil)
         shell: pwsh
         run: |
-          $vsPath = & vswhere -products * -requires Microsoft.Component.MSBuild -property installationPath -latest
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+
+          $existing = & $vswhere -products * -requires Microsoft.VisualStudio.Component.VC.ATL -property installationPath 2>$null
+          if ($existing) { Write-Host "C++ ATL already installed at $existing"; exit 0 }
+
+          $vsPath = & $vswhere -products * -requires Microsoft.Component.MSBuild -property installationPath -latest
           Write-Host "VS install path: $vsPath"
-          $p = Start-Process "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList "modify --installPath ""$vsPath"" --add Microsoft.VisualStudio.Component.VC.ATL --quiet --wait --norestart --nocache" -Wait -PassThru -NoNewWindow
-          if ($p.ExitCode -ne 0) { throw "vs_installer exit code $($p.ExitCode)" }
-          $verified = & vswhere -products * -requires Microsoft.VisualStudio.Component.VC.ATL -property installationPath
+
+          $p = Start-Process $installer -ArgumentList @('modify', "--installPath", $vsPath, '--add', 'Microsoft.VisualStudio.Component.VC.ATL', '--quiet', '--wait', '--norestart', '--nocache') -Wait -PassThru -NoNewWindow
+          Write-Host "vs_installer exit code: $($p.ExitCode)"
+
+          if ($p.ExitCode -notin @(0, 3010)) { throw "ATL install failed with code $($p.ExitCode)" }
+
+          $verified = & $vswhere -products * -requires Microsoft.VisualStudio.Component.VC.ATL -property installationPath 2>$null
           if (-not $verified) { throw "ATL component not found after install" }
-          Write-Host "C++ ATL installed and verified"
+          Write-Host "C++ ATL installed and verified at $verified"
 
       - name: Install MinGW-w64 (for Go CGO)
         run: |
