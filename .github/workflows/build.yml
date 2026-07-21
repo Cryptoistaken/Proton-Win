@@ -63,20 +63,24 @@ jobs:
           $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
           $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 
-          $existing = & $vswhere -products * -requires Microsoft.VisualStudio.Component.VC.ATL -property installationPath 2>$null
-          if ($existing) { Write-Host "C++ ATL already installed at $existing"; exit 0 }
+          function Test-AtlHeaders($vsPath) {
+            $toolsPath = Join-Path $vsPath "VC\Tools\MSVC"
+            return (Get-ChildItem $toolsPath -Recurse -Filter "atlbase.h" -ErrorAction SilentlyContinue | Select-Object -First 1) -ne $null
+          }
 
           $vsPath = & $vswhere -products * -requires Microsoft.Component.MSBuild -property installationPath -latest
           Write-Host "VS install path: $vsPath"
 
+          if (Test-AtlHeaders $vsPath) { Write-Host "ATL headers already on disk"; exit 0 }
+
+          Write-Host "Installing C++ ATL component..."
           $p = Start-Process $installer -ArgumentList @('modify', "--installPath", $vsPath, '--add', 'Microsoft.VisualStudio.Component.VC.ATL', '--quiet', '--wait', '--norestart', '--nocache') -Wait -PassThru -NoNewWindow
           Write-Host "vs_installer exit code: $($p.ExitCode)"
 
           if ($p.ExitCode -notin @(0, 3010)) { throw "ATL install failed with code $($p.ExitCode)" }
 
-          $verified = & $vswhere -products * -requires Microsoft.VisualStudio.Component.VC.ATL -property installationPath 2>$null
-          if (-not $verified) { throw "ATL component not found after install" }
-          Write-Host "C++ ATL installed and verified at $verified"
+          if (-not (Test-AtlHeaders $vsPath)) { throw "atlbase.h not found after ATL install" }
+          Write-Host "C++ ATL verified on disk"
 
       - name: Install MinGW-w64 (for Go CGO)
         run: |
