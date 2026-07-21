@@ -55,6 +55,8 @@ jobs:
         with:
           toolchain: stable
 
+      - uses: microsoft/setup-msbuild@v2
+
       - name: Install MinGW-w64 (for Go CGO)
         run: |
           choco install mingw -y --no-progress
