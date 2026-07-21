@@ -92,7 +92,23 @@ jobs:
           dotnet publish src\ProtonVPN.Service\ProtonVPN.Service.csproj -c Release -r win-x64 --self-contained -o publish/service
           Copy-Item "src\bin\win-x64\publish\*" "publish\service" -Recurse -Force -ErrorAction SilentlyContinue
 
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: cmd
+        run: |
+          :: Disable code signing (not available on forks)
+          powershell -Command "(gc Setup\SetupBase.iss) -replace '^SignTool=.*', '; SignTool=DISABLED' | sc Setup\SetupBase.iss"
+          set BUILD_PATH=%CD%\publish\service
+          iscc Setup\Setup.x64.iss
+
       - uses: actions/upload-artifact@v4
         with:
           name: protonvpn-build
           path: publish/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: protonvpn-installer
+          path: Setup\Installers\
