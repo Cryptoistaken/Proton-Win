@@ -87,16 +87,16 @@ jobs:
         run: dotnet test src\bin\*.Tests.dll --no-restore --no-build --logger "console;verbosity=normal"
 
       - name: Publish artifacts
+        shell: cmd
         run: |
           set BUILD_PATH=src\bin\win-x64\publish
-          dotnet publish src\Client\ProtonVPN.Client\ProtonVPN.Client.csproj -c Release -r win-x64 --self-contained -o $BUILD_PATH
-          dotnet publish src\ProtonVPN.Service\ProtonVPN.Service.csproj -c Release -r win-x64 --self-contained -o $BUILD_PATH
-          dotnet publish src\ProtonVPN.TlsVerify\ProtonVPN.TlsVerify.csproj -c Release -r win-x64 --self-contained -o $BUILD_PATH
-          dotnet publish src\ProtonVPN.WireGuardService\ProtonVPN.WireGuardService.csproj -c Release -r win-x64 --self-contained -o $BUILD_PATH
-          dotnet publish src\ProtonVPN.RestoreInternet\ProtonVPN.RestoreInternet.csproj -c Release -r win-x64 --self-contained -o $BUILD_PATH
-          dotnet publish src\ProtonVPN.Launcher\ProtonVPN.Launcher.csproj -c Release -r win-x64 --self-contained -o $BUILD_PATH -p:PublishSingleFile=true
-          dotnet publish src\ProtonInstaller\ProtonInstaller.csproj -c Release -r win-x64 --self-contained -o $BUILD_PATH
-        shell: cmd
+          dotnet publish src\Client\ProtonVPN.Client\ProtonVPN.Client.csproj -c Release -r win-x64 --self-contained -o %BUILD_PATH%
+          dotnet publish src\ProtonVPN.Service\ProtonVPN.Service.csproj -c Release -r win-x64 --self-contained -o %BUILD_PATH%
+          dotnet publish src\ProtonVPN.TlsVerify\ProtonVPN.TlsVerify.csproj -c Release -r win-x64 --self-contained -o %BUILD_PATH%
+          dotnet publish src\ProtonVPN.WireGuardService\ProtonVPN.WireGuardService.csproj -c Release -r win-x64 --self-contained -o %BUILD_PATH%
+          dotnet publish src\ProtonVPN.RestoreInternet\ProtonVPN.RestoreInternet.csproj -c Release -r win-x64 --self-contained -o %BUILD_PATH%
+          dotnet publish src\ProtonVPN.Launcher\ProtonVPN.Launcher.csproj -c Release -r win-x64 --self-contained -o %BUILD_PATH% -p:PublishSingleFile=true
+          dotnet publish src\ProtonInstaller\ProtonInstaller.csproj -c Release -r win-x64 --self-contained -o %BUILD_PATH%
 
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
