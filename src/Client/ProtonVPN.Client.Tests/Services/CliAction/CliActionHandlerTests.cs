@@ -159,7 +159,7 @@ public class CliActionHandlerTests
 
         await _connectionManager.Received(1).ConnectAsync(
             VpnTriggerDimension.Auto,
-            Arg.Is<IConnectionIntent>(i => i.IsSameAs(new ConnectionIntent(SingleCountryLocationIntent.From("US")))));
+            Arg.Is<IConnectionIntent>(i => i.IsSameAs(new ConnectionIntent(SingleCountryLocationIntent.From("US"), null))));
     }
 
     [TestMethod]
@@ -171,7 +171,7 @@ public class CliActionHandlerTests
 
         await _connectionManager.Received(1).ConnectAsync(
             VpnTriggerDimension.Auto,
-            Arg.Is<IConnectionIntent>(i => i.IsSameAs(new ConnectionIntent(MultiCountryLocationIntent.Random))));
+            Arg.Is<IConnectionIntent>(i => i.IsSameAs(new ConnectionIntent(MultiCountryLocationIntent.Random, null))));
     }
 
     [TestMethod]
