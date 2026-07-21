@@ -3,5 +3,9 @@
     <ClCompile>
       <AdditionalIncludeDirectories Condition="'$(ATL_INCLUDE)'!=''">$(ATL_INCLUDE);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories Condition="'$(ATL_INCLUDE)'!='' And '$(Platform)'=='x64'">$(ATL_INCLUDE)\..\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="'$(ATL_INCLUDE)'!='' And '$(Platform)'=='Win32'">$(ATL_INCLUDE)\..\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
 </Project>
