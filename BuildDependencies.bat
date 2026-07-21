@@ -46,6 +46,7 @@ if "%~1"=="publish" (
 )
 
 set buildParams=/p:PlatformToolset=v143 /p:Configuration=Release /p:OutDir=%resourcesDir% /clp:ErrorsOnly
+if defined ATL_INCLUDE set buildParams=%buildParams% /p:AdditionalIncludeDirectories="%ATL_INCLUDE%"
 set x86buildParams=%buildParams% /p:Platform=Win32
 set x64buildParams=%buildParams% /p:Platform=%PLATFORM%
 
