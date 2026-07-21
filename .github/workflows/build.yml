@@ -67,6 +67,7 @@ jobs:
           $atlInclude = $atlHeader.Directory.FullName
           Write-Host "ATL include: $atlInclude"
           Add-Content $env:GITHUB_ENV "ATL_INCLUDE=$atlInclude"
+          Add-Content $env:GITHUB_ENV "VS_INSTALL_DIR=$vsPath\"
 
       - name: Install MinGW-w64 (for Go CGO)
         run: |
@@ -87,11 +88,11 @@ jobs:
       - name: Build native dependencies
         shell: cmd
         run: |
-          set INCLUDE=%INCLUDE%;%ATL_INCLUDE%
+          call "%VS_INSTALL_DIR%VC\Auxiliary\Build\vcvarsall.bat" x64
           BuildDependencies.bat publish
         env:
           PLATFORM: x64
-          ATL_INCLUDE: ${{ env.ATL_INCLUDE }}
+          VS_INSTALL_DIR: ${{ env.VS_INSTALL_DIR }}
 
       - name: Restore solution
         run: dotnet restore ProtonVPN.slnx
