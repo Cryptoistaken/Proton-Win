@@ -89,10 +89,12 @@ jobs:
         shell: cmd
         run: |
           call "%VS_INSTALL_DIR%VC\Auxiliary\Build\vcvarsall.bat" x64
+          set "INCLUDE=%ATL_INCLUDE%;%INCLUDE%"
           BuildDependencies.bat publish
         env:
           PLATFORM: x64
           VS_INSTALL_DIR: ${{ env.VS_INSTALL_DIR }}
+          ATL_INCLUDE: ${{ env.ATL_INCLUDE }}
 
       - name: Restore solution
         run: dotnet restore ProtonVPN.slnx
