@@ -1,0 +1,84 @@
+name: Build & Test
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-csharp:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore C# projects
+        run: dotnet restore src\Client\ProtonVPN.Client\ProtonVPN.Client.csproj
+
+      - name: Build C# projects
+        run: dotnet build src\Client\ProtonVPN.Client\ProtonVPN.Client.csproj --no-restore -c Release
+
+      - name: Restore test project
+        run: dotnet restore src\Client\ProtonVPN.Client.Tests\ProtonVPN.Client.Tests.csproj
+
+      - name: Build test project
+        run: dotnet build src\Client\ProtonVPN.Client.Tests\ProtonVPN.Client.Tests.csproj --no-restore -c Release
+
+      - name: Run unit tests
+        run: dotnet test src\Client\ProtonVPN.Client.Tests\bin\Release\ProtonVPN.Client.Tests.dll --no-restore --no-build --logger "console;verbosity=normal"
+
+  full-build:
+    if: github.ref_name == 'main' || startsWith(github.ref_name, 'release/')
+    runs-on: windows-latest
+    needs: [build-csharp]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install TDM-GCC MinGW
+        run: choco install tdm-gcc -y --no-progress
+
+      - name: Build native dependencies
+        shell: cmd
+        run: BuildDependencies.bat publish
+        env:
+          PLATFORM: x64
+
+      - name: Restore solution
+        run: dotnet restore ProtonVPN.slnx
+
+      - name: Build solution
+        run: dotnet build ProtonVPN.slnx --no-restore -c Release
+
+      - name: Run all unit tests
+        run: dotnet test src\bin\*.Tests.dll --no-restore --no-build --logger "console;verbosity=normal"
+
+      - name: Publish artifacts
+        run: |
+          dotnet publish src\Client\ProtonVPN.Client\ProtonVPN.Client.csproj -c Release -r win-x64 --self-contained -o publish/app
+          dotnet publish src\ProtonVPN.Service\ProtonVPN.Service.csproj -c Release -r win-x64 --self-contained -o publish/service
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: protonvpn-build
+          path: publish/

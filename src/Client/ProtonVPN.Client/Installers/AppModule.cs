@@ -45,6 +45,7 @@ using ProtonVPN.Client.Notifications.Installers;
 using ProtonVPN.Client.Services;
 using ProtonVPN.Client.Services.Activation;
 using ProtonVPN.Client.Services.Bootstrapping;
+using ProtonVPN.Client.Services.CliAction;
 using ProtonVPN.Client.Services.Bootstrapping.Activators;
 using ProtonVPN.Client.Services.Browsing;
 using ProtonVPN.Client.Services.DefaultConnections;
@@ -291,6 +292,8 @@ public class AppModule : Module
         builder.RegisterType<EfficiencyModeEnabler>().AsImplementedInterfaces().SingleInstance();
 
         builder.RegisterType<SettingsHeartbeatService>().AsImplementedInterfaces().SingleInstance().AutoActivate();
+
+        builder.RegisterType<CliActionHandler>().AsSelf().SingleInstance();
 
         builder.RegisterType<P2PDetectionWindowActivator>().AsSelf().AsImplementedInterfaces().SingleInstance();
         builder.RegisterType<StreamingDetectionWindowActivator>().AsSelf().AsImplementedInterfaces().SingleInstance();

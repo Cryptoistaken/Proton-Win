@@ -18,6 +18,7 @@
  */
 
 using Microsoft.Windows.AppLifecycle;
+using Autofac;
 using ProtonVPN.Client.Common.Dispatching;
 using ProtonVPN.Client.Core.Services.Activation;
 using ProtonVPN.Client.Logic.Auth.Contracts;
@@ -27,6 +28,7 @@ using ProtonVPN.Client.Logic.Servers.Cache;
 using ProtonVPN.Client.Logic.Services.Contracts;
 using ProtonVPN.Client.Logic.Updates.Contracts;
 using ProtonVPN.Client.Logic.Users.Contracts;
+using ProtonVPN.Client.Services.CliAction;
 using ProtonVPN.Client.Settings.Contracts;
 using ProtonVPN.Client.Settings.Contracts.Enums;
 using ProtonVPN.Client.Settings.Contracts.Initializers;
@@ -60,6 +62,7 @@ public class Bootstrapper : IBootstrapper
     private readonly IUIThreadDispatcher _uiThreadDispatcher;
 
     private bool _isOpenOnDesktopRequested;
+    private CliAction? _cliAction;
 
     public Bootstrapper(
         IClientInstallsReporter clientInstallsReporter,
@@ -109,6 +112,21 @@ public class Bootstrapper : IBootstrapper
 
             _globalSettingsMigrator.Migrate();
 
+            if (_cliAction is { IsExitAction: true })
+            {
+                await StartServiceAndLogInAsync();
+                bool result = await Resolve<CliActionHandler>().ExecuteActionAsync(_cliAction);
+                Program.ExitCliMode();
+                return;
+            }
+
+            if (_cliAction is { Type: CliActionType.Status })
+            {
+                Resolve<CliActionHandler>().ExecuteActionAsync(_cliAction).GetAwaiter().GetResult();
+                Program.ExitCliMode();
+                return;
+            }
+
             HandleMainWindow();
 
             await StartServiceAndLogInAsync();
@@ -117,6 +135,12 @@ public class Bootstrapper : IBootstrapper
         {
             _logger.Error<AppLog>("Error occured during the app start up process.", e);
         }
+    }
+
+    private T Resolve<T>() where T : class
+    {
+        return (App.Current as App)!.Host.Services.GetService(typeof(T)) as T
+            ?? throw new InvalidOperationException($"Cannot resolve {typeof(T).Name}.");
     }
 
     private async Task StartServiceAndLogInAsync()
@@ -139,8 +163,19 @@ public class Bootstrapper : IBootstrapper
 
     private void OnCurrentAppInstanceActivated(object? sender, AppActivationArguments e)
     {
-        _uiThreadDispatcher.TryEnqueue(() =>
+        _uiThreadDispatcher.TryEnqueue(async () =>
         {
+            string[]? redirectedArgs = CliActionHandler.ReadAndDeleteArgsTempFile();
+            if (redirectedArgs is { Length: > 0 })
+            {
+                CliAction cliAction = Resolve<CliActionHandler>().DetectAction(redirectedArgs);
+                if (cliAction.Type != CliActionType.None)
+                {
+                    await Resolve<CliActionHandler>().ExecuteActionAsync(cliAction);
+                    return;
+                }
+            }
+
             switch (e.Kind)
             {
                 case ExtendedActivationKind.Protocol:
@@ -169,6 +204,10 @@ public class Bootstrapper : IBootstrapper
     private void HandleCommandLineArguments()
     {
         string[] args = Environment.GetCommandLineArgs();
+        bool isWait = false;
+        CliActionType? cliType = null;
+        string? cliArgument = null;
+
         for (int i = 0; i < args.Length; i++)
         {
             string arg = args[i];
@@ -223,6 +262,33 @@ public class Bootstrapper : IBootstrapper
             {
                 _isOpenOnDesktopRequested = true;
             }
+            else if (arg.EqualsIgnoringCase(CliArgTokens.Wait))
+            {
+                isWait = true;
+            }
+            else if (arg.EqualsIgnoringCase(CliArgTokens.Connect))
+            {
+                cliType = CliActionType.Connect;
+                string? next = i + 1 < args.Length ? args[i + 1] : null;
+                if (next != null && !next.StartsWith('-'))
+                {
+                    cliArgument = next;
+                    i++;
+                }
+            }
+            else if (arg.EqualsIgnoringCase(CliArgTokens.Disconnect))
+            {
+                cliType = CliActionType.Disconnect;
+            }
+            else if (arg.EqualsIgnoringCase(CliArgTokens.Status))
+            {
+                cliType = CliActionType.Status;
+            }
+        }
+
+        if (cliType.HasValue)
+        {
+            _cliAction = new CliAction(cliType.Value, cliArgument, cliType.Value == CliActionType.Status ? false : isWait);
         }
 
         HandleProtonInstallerArguments(args);

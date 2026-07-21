@@ -22,6 +22,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using ProtonVPN.Common.Core.Extensions;
 using ProtonVPN.Client.Services.Bootstrapping.Helpers;
+using ProtonVPN.Client.Services.CliAction;
 
 namespace ProtonVPN.Client;
 
@@ -45,6 +46,8 @@ public class Program
             return;
         }
 
+        bool hasCliAction = CliArgTokens.ContainsCliAction(args);
+
         if (IsFirstInstance())
         {
             SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID);
@@ -55,6 +58,11 @@ public class Program
                 SynchronizationContext.SetSynchronizationContext(context);
                 new App();
             });
+        }
+        else if (hasCliAction)
+        {
+            CliActionHandler.WriteArgsToTempFile(args);
+            AppInstanceHelper.RedirectActivation();
         }
         else
         {
@@ -78,6 +86,12 @@ public class Program
         catch
         {
         }
+    }
+
+    public static void ExitCliMode()
+    {
+        ReleaseMutex();
+        Environment.Exit(0);
     }
 
     [DllImport("shell32.dll", SetLastError = true)]
