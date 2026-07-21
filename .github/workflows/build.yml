@@ -35,7 +35,7 @@ jobs:
         run: dotnet test src\Client\ProtonVPN.Client.Tests\ProtonVPN.Client.Tests.csproj --no-restore --no-build -c Release /p:Platform=x64 --logger "console;verbosity=normal"
 
   full-build:
-    if: github.ref_name == 'main' || startsWith(github.ref_name, 'release/')
+    if: github.ref_name == 'main' || github.ref_name == 'master' || startsWith(github.ref_name, 'release/')
     runs-on: windows-latest
     needs: [build-csharp]
     steps:
